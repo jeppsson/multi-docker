@@ -1,0 +1,16 @@
+sudo: required
+services:
+    - docker
+
+before_install:
+    - docker build -t jeppsson/docker-react -f Dockerfile.dev .
+
+script:
+    - docker run -e CI=true jeppsson/docker-react npm run test
+
+deploy:
+    provider: azure_web_apps
+    edge: true
+    verbose: true
+    on:
+        branch: master
