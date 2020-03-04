@@ -3,14 +3,27 @@ services:
     - docker
 
 before_install:
-    - docker build -t jeppsson/docker-react -f Dockerfile.dev .
+    - docker build -t jeppsson/docker-test -f ./client/Dockerfile.dev ./client
 
 script:
-    - docker run -e CI=true jeppsson/docker-react npm run test
+    - docker run -e CI=true jeppsson/docker-test npm run test
 
-deploy:
-    provider: azure_web_apps
-    edge: true
-    verbose: true
-    on:
-        branch: master
+after_success:
+    # Build images
+    - docker build -t jeppsson/multi-client ./client
+    - docker build -t jeppsson/multi-nginx ./nginx
+    - docker build -t jeppsson/multi-server ./server
+    - docker build -t jeppsson/multi-worker ./worker
+    # Login to docker
+    - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+    # Upload to docker
+    - docker push jeppsson/multi-client
+    - docker push jeppsson/multi-nginx
+    - docker push jeppsson/multi-server
+    - docker push jeppsson/multi-worker
+# deploy:
+#     provider: azure_web_apps
+#     edge: true
+#     verbose: true
+#     on:
+#         branch: master
